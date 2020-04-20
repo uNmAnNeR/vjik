@@ -1,6 +1,6 @@
 {
   "name": "vjik",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Range slider for your UI",
   "main": "index.js",
   "scripts": {
