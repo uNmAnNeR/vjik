@@ -1,0 +1,67 @@
+<html>
+<head></head>
+
+<body>
+  <div id="vjik">
+    <div class="vjik-handle" id="vjik-handle-start"></div>
+    <div class="vjik-handle" id="vjik-handle-stop"></div>
+  </div>
+
+  <style type="text/css">
+    #vjik {
+      width: 100%;
+      height: 30px;
+      background: green;
+      display: flex;
+      align-items: center;
+    }
+
+    .vjik-handle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    #vjik-handle-start {
+      background: red;
+    }
+
+    #vjik-handle-stop {
+      background: yellow;
+    }
+  </style>
+  
+  <script type="module" type="text/javascript">
+    import Vjik from './src/index.js';
+    const slider = new Vjik(document.getElementById('vjik'), {
+      min: 1,
+      value: 1, // TODO remove and check
+      max: 200,
+
+      // range: [
+      //   new RangeComponent('.range', {
+      //     ...props,
+      //   }),
+      // ],
+
+      // start: new HandleComponent('.handle', {
+      //   min: 10,
+      //   max: 20,
+      // }),
+
+      range: {
+        start: [
+          document.getElementById('vjik-handle-start'),
+          // model: new Handle({...}),
+          {
+            min: 20,
+            max: 100,
+          },
+        ],
+
+        stop: document.getElementById('vjik-handle-stop'),
+      },
+    });
+  </script>
+</body>
+</html>
