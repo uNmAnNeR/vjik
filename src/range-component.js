@@ -9,6 +9,7 @@ class RangeComponent {
     if (el) {
       this.el = el;
       this.el.style.position = 'absolute';
+      this._originalTransform = window.getComputedStyle(this.el).transform;
     }
 
     if (start) {
@@ -37,8 +38,8 @@ class RangeComponent {
 
     const startOffset = this.start?.offset ?? 0;
     const stopOffset = this.stop?.offset ?? this.bar.width;
-    this.el.style.transform = 'translateX(' + startOffset + 'px)';
-    this.el.style.width = Math.max(stopOffset - startOffset, 0);
+    this.el.style.transform = `${this._originalTransform} translateX(${startOffset}px)`;
+    this.el.style.width = `${Math.max(stopOffset - startOffset, 0)}px`;
   }
 
   destroy () {

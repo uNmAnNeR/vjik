@@ -68,9 +68,12 @@ class BarComponent {
     nearestHandle.isActive = true;
     this.bindChangeEvents();
 
-    this._moveOffset = this._isEventOnElement(e, nearestHandle.el) ?
-      moveOffset :
-      0;
+    if (this._isEventOnElement(e, nearestHandle.el)) {
+      this._moveOffset = moveOffset;
+    } else {
+      this._moveOffset = 0;
+      this.onMove(e);
+    }
   }
 
   _getEventOffset (e) {

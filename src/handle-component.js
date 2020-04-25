@@ -18,6 +18,7 @@ class HandleComponent {
     this.el = el;
     this.el.style.position = 'absolute';
     if (this.el.tabIndex === -1) this.el.tabIndex = '-1';
+    this._originalTransform = window.getComputedStyle(this.el).transform;
     const { range, onChange, ...hOpts } = opts;
     this.range = range;
     this.onChange = onChange;
@@ -28,7 +29,7 @@ class HandleComponent {
   }
 
   _updateElementPosition () {
-    this.el.style.transform = 'translateX(' + this.offset + 'px) translateX(-50%)';
+    this.el.style.transform = `${this._originalTransform} translateX(${this.offset}px) translateX(-50%)`;
     this.range.updateView();
   }
 
