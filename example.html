@@ -3,6 +3,7 @@
 
 <body>
   <div id="vjik">
+    <div id="vjik-range"></div>
     <div class="vjik-handle" id="vjik-handle-start"></div>
     <div class="vjik-handle" id="vjik-handle-stop"></div>
   </div>
@@ -22,6 +23,11 @@
       border-radius: 50%;
     }
 
+    #vjik-range {
+      background: blue;
+      height: 20px;
+    }
+
     #vjik-handle-start {
       background: red;
     }
@@ -31,11 +37,11 @@
     }
   </style>
   
-  <script type="module" type="text/javascript">
-    import Vjik from './src/index.js';
+
+  <script type="text/javascript" src="dist/vjik.js"></script>
+  <script type="text/javascript">
     const slider = new Vjik(document.getElementById('vjik'), {
       min: 1,
-      value: 1, // TODO remove and check
       max: 200,
 
       // range: [
@@ -49,18 +55,21 @@
       //   max: 20,
       // }),
 
-      range: {
-        start: [
-          document.getElementById('vjik-handle-start'),
-          // model: new Handle({...}),
-          {
-            min: 20,
-            max: 100,
-          },
-        ],
+      range: [
+        document.getElementById('vjik-range'),
+        {
+          start: [
+            document.getElementById('vjik-handle-start'),
+            // model: new Handle({...}),
+            {
+              min: 20,
+              max: 100,
+            },
+          ],
 
-        stop: document.getElementById('vjik-handle-stop'),
-      },
+          stop: document.getElementById('vjik-handle-stop'),
+        },
+      ],
     });
   </script>
 </body>

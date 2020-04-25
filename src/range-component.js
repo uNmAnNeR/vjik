@@ -6,6 +6,10 @@ class RangeComponent {
   constructor (el, opts) {
     let { start, stop, ...rOpts } = opts;
     Object.assign(this, rOpts);
+    if (el) {
+      this.el = el;
+      this.el.style.position = 'absolute';
+    }
 
     if (start) {
       if (!Array.isArray(start)) start = [start];
@@ -26,6 +30,15 @@ class RangeComponent {
       });
       this.stop.syncView();
     }
+  }
+
+  updateView () {
+    if (!this.el) return;
+
+    const startOffset = this.start?.offset ?? 0;
+    const stopOffset = this.stop?.offset ?? this.bar.width;
+    this.el.style.transform = 'translateX(' + startOffset + 'px)';
+    this.el.style.width = Math.max(stopOffset - startOffset, 0);
   }
 
   destroy () {

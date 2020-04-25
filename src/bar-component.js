@@ -76,10 +76,10 @@ class BarComponent {
   _getEventOffset (e) {
     const ebox = this.el.getBoundingClientRect();
 
-    // TODO use .? operator
+    // TODO handle more then one touch
     return this.vertical ?
-      ebox.bottom - ((e.touches && e.touches.length) ? e.touches[0].clientY : e.clientY) :
-      ((e.touches && e.touches.length) ? e.touches[0].pageX : e.pageX) - ebox.left;
+      (ebox.bottom - (e.touches?.[0]?.clientY ?? e.clientY)) :
+      ((e.touches?.[0]?.pageX ?? e.pageX) - ebox.left);
   }
 
   positionToValue (p) {
