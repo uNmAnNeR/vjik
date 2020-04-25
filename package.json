@@ -1,6 +1,6 @@
 {
   "name": "vjik",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Range slider for your UI",
   "main": "dist/vjik.js",
   "module": "esm/index.js",
