@@ -127,6 +127,7 @@ class BarComponent {
   }
 
   destroy () {
+    BarComponent.START_EVENTS.forEach(ev => this.el.removeEventListener(ev, this.onStartMove));
     this.ranges.forEach(r => r.destroy());
   }
 }

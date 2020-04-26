@@ -132,5 +132,6 @@ class HandleComponent {
 
   destroy () {
     this.unbindEvents();
+    this.el.style.transform = this._originalTransform;
   }
 }

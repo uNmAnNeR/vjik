@@ -45,6 +45,8 @@ class RangeComponent {
   destroy () {
     if (this.start) this.start.destroy();
     if (this.stop) this.stop.destroy();
+    this.el.style.transform = this._originalTransform;
+    this.el.style.width = '0px';
   }
 
   handleMin (handle) {
