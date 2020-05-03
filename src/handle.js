@@ -1,13 +1,52 @@
-import PubSub from './utils/pubsub.js';
+import Vjik from './vjik.js';
 import { bound } from './utils/fn.js';
 
 
+const LEFT_KEY = 37;
+const UP_KEY = 38;
+const RIGHT_KEY = 39;
+const DOWN_KEY = 40;
+
 export default
-class Handle extends PubSub {
+class Handle {
   constructor (opts) {
-    super();
+    this._onKeyDown = this._onKeyDown.bind(this);
     this._valueChanges = [];
-    Object.assign(this, Handle.DEFAULTS, opts);
+
+    const { value, ...restOpts } = { ...Handle.DEFAULTS, ...opts };
+    Object.assign(this, restOpts);
+
+    if (this.el) {
+      this.el.style.position = 'absolute';
+      if (this.el.tabIndex === -1) this.el.tabIndex = '-1';
+      this._originalTransform = window.getComputedStyle(this.el).transform;
+      if (this._originalTransform === 'none') this._originalTransform = '';
+      this.bindEvents();
+    }
+    this.value = value;
+
+    this.updateView();
+  }
+
+  updateView () {
+    if (!this.el) return;
+
+    this.el.style.transform = `${this._originalTransform} translateX(${this.offset}px) translateX(-50%)`;
+    this._onMove();
+  }
+
+  get isActive () {
+    return this._isActive;
+  }
+
+  set isActive (isActive) {
+    this._isActive = isActive;
+    if (isActive) {
+      this._onStartMove();
+      if (this.el) this.el.focus();
+    } else {
+      this._onEndMove();
+    }
   }
 
   get value () {
@@ -15,20 +54,122 @@ class Handle extends PubSub {
   }
 
   set value (v) {
+    v = bound(this.minValue, v, this.maxValue);
     if (this.value === v) return;
 
     this._valueChanges.push(this.value);
 
-    this._value = bound(this.min, v, this.max);
-    this.emit('verify', this.value, this);
+    this._value = v;
+    this._onVerify();
 
     const oldValue = this._valueChanges.pop();
 
     if (!this._valueChanges.length && this.value !== oldValue) {
-      this.emit('change', this.value, this);
+      this._onChange();
     }
+  }
+
+  get canBeMoved () {
+    return this.minValue < this.value || this.value < this.maxValue;
+  }
+
+  get position () {
+    return this.isActive ?
+      this._position :
+      this.bar.valueToPosition(this.value);
+  }
+
+  set position (p) {
+    p = bound(this.minPosition, p, this.maxPosition);
+    if (this.isActive) this._position = p;
+    this.value = this.bar.positionToValue(p);
+    this.updateView();
+  }
+
+  get minValue () {
+    return Math.max(...[
+      this.min,
+      this.bar.handleMin(this),
+    ].filter(v => v != null));
+  }
+
+  get maxValue () {
+    return Math.min(...[
+      this.max,
+      this.bar.handleMax(this),
+    ].filter(v => v != null));
+  }
+
+  get minPosition () {
+    const minVal = this.minValue;
+    return minVal != null ? this.bar.valueToPosition(minVal) : null;
+  }
+
+  get maxPosition () {
+    const maxVal = this.maxValue;
+    return maxVal != null ? this.bar.valueToPosition(maxVal) : null;
+  }
+
+  get offset () {
+    return this.position * this.bar.width;
+  }
+
+  canGetCloserToPosition (p) {
+    return bound(this.minPosition, p, this.maxPosition) !== this.position;
+  }
+
+  _onKeyDown (e) {
+    if (e.keyCode < LEFT_KEY || DOWN_KEY < e.keydown) return;
+    e.preventDefault();
+
+    if (e.keyCode === RIGHT_KEY || e.keyCode === UP_KEY) this.value += this.bar.keydownStep;
+    if (e.keyCode === LEFT_KEY || e.keyCode === DOWN_KEY) this.value -= this.bar.keydownStep;
+  }
+
+  bindEvents () {
+    this.el.addEventListener('keydown', this._onKeyDown);
+  }
+
+  unbindEvents () {
+    this.el.removeEventListener('keydown', this._onKeyDown);
+  }
+
+  sync () {
+    this.value = this.value;
+    this.updateView();
+  }
+
+  destroy () {
+    if (!this.el) return;
+
+    this.unbindEvents();
+    this.el.style.transform = this._originalTransform;
+  }
+
+  _onChange () {
+    if (this.onChange) this.onChange(this._value, this);
+    if (!this.isActive) this.updateView();
+  }
+
+  _onVerify () {
+    if (this.onVerify) this.onVerify(this.value, this);
+  }
+
+  _onMove () {
+    this.bar._onHandleMove(this);
+    if (this.onMove) this.onMove(this.value, this);
+  }
+
+  _onStartMove () {
+    if (this.onStartMove) this.onStartMove(this.value, this);
+  }
+
+  _onEndMove () {
+    if (this.onEndMove) this.onEndMove(this.value, this);
   }
 }
 Handle.DEFAULTS = {
   value: 0,
 };
+
+Vjik.Handle = Handle;

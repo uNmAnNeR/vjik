@@ -6,6 +6,7 @@
     <div id="vjik-range"></div>
     <div class="vjik-handle" id="vjik-handle-start"></div>
     <div class="vjik-handle" id="vjik-handle-stop"></div>
+    <div class="vjik-handle" id="vjik-handle-stop2"></div>
   </div>
 
   <style type="text/css">
@@ -21,6 +22,7 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
+      border: 1px solid grey;
     }
 
     #vjik-range {
@@ -40,34 +42,35 @@
 
   <script type="text/javascript" src="dist/vjik.js"></script>
   <script type="text/javascript">
-    const slider = new Vjik(document.getElementById('vjik'), {
+    const slider = Vjik({
+      el: document.getElementById('vjik'),
       min: 1,
       max: 200,
 
-      // range: [
-      //   new RangeComponent('.range', {
-      //     ...props,
-      //   }),
-      // ],
+      handles: {
+        start: {
+          el: document.getElementById('vjik-handle-start'),
+          min: 20,
+          max: 100,
+        },
+        stop: {
+          el: document.getElementById('vjik-handle-stop'),
+        },
+        stop2: {
+          el: document.getElementById('vjik-handle-stop2'),
+        },
+      },
 
-      // start: new HandleComponent('.handle', {
-      //   min: 10,
-      //   max: 20,
-      // }),
-
-      range: [
-        document.getElementById('vjik-range'),
+      ranges: [
         {
-          start: [
-            document.getElementById('vjik-handle-start'),
-            // model: new Handle({...}),
-            {
-              min: 20,
-              max: 100,
-            },
-          ],
-
-          stop: document.getElementById('vjik-handle-stop'),
+          // el: document.getElementById('vjik-range'),
+          start: 'start',
+          stop: 'stop',
+        },
+        {
+          el: document.getElementById('vjik-range'),
+          start: 'stop',
+          stop: 'stop2',
         },
       ],
     });

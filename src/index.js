@@ -1,15 +1,9 @@
 export { default as Handle } from './handle.js';
-export { default as HandleComponent } from './handle-component.js';
-export { default as RangeComponent } from './range-component.js';
-export { default as BarComponent } from './bar-component.js';
+export { default as Range } from './range.js';
+export { default as Bar } from './bar.js';
 
-import BarComponent from './bar-component.js';
+import Vjik from './vjik.js';
 
-
-export default
-function Vjik (...args) {
-  return new BarComponent(...args);
-}
 
 try {
   globalThis.Vjik = Vjik;
