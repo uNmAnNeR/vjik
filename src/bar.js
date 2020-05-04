@@ -13,10 +13,18 @@ class Bar {
 
     this.handleComponents = [];
     this.handleRefs = {};
+
     this.rangeComponents = [];
     this.rangeRefs = {};
 
-    Object.assign(this, Bar.DEFAULTS, opts);
+    this.update({ ...Bar.DEFAULTS, ...opts });
+  }
+
+  update (opts) {
+    // TODO save and restore state
+    this.destroy();
+
+    Object.assign(this, opts);
 
     if (this.el) {
       const position = window.getComputedStyle(this.el).position;
@@ -78,11 +86,13 @@ class Bar {
     // TODO support multitouch! but currently just disable
     this.unbindChangeEvents();
 
+    if (this.disabled) return;
+
     const startOffset = this._getEventOffset(e);
     const startPosition = startOffset / this.width;
     const [nearestHandle, moveOffset] = this.handleComponents.reduce(([nearest, nearestDist], h) => {
       const hDist = startOffset - h.offset;
-      return ((!nearest || Math.abs(nearestDist) > Math.abs(hDist)) && h.canBeMoved &&
+      return ((!nearest || Math.abs(nearestDist) > Math.abs(hDist)) && h.canBeMoved && !h.disabled &&
         (this._isEventOnElement(e, h.el) || h.canGetCloserToPosition(startPosition))) ?
         [h, hDist] :
         [nearest, nearestDist];
@@ -119,6 +129,7 @@ class Bar {
 
   onMove (e) {
     e.preventDefault();
+    if (this.disabled || this.activeHandle.disabled) return this.onEndMove(e);
     this.activeHandle.position = (this._getEventOffset(e) - this._moveOffset) / this.width;
   }
 
@@ -154,6 +165,7 @@ class Bar {
     if (this.el) {
       Bar.START_EVENTS.forEach(ev => this.el.removeEventListener(ev, this.onStartMove));
     }
+    window.removeEventListener('resize', this.updateView);
     this.handleComponents.forEach(h => h.destroy());
     this.rangeComponents.forEach(r => r.destroy());
   }
@@ -182,6 +194,14 @@ class Bar {
       this.max,
       ...this.rangesWithHandle(h).map(rc => rc.handleMax(h)),
     ].filter(m => m != null));
+  }
+
+  disable () {
+    this.disabled = true;
+  }
+
+  enable () {
+    this.disabled = false;
   }
 
   rangesWithHandle (h) {

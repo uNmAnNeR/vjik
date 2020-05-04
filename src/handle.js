@@ -13,18 +13,27 @@ class Handle {
     this._onKeyDown = this._onKeyDown.bind(this);
     this._valueChanges = [];
 
-    const { value, ...restOpts } = { ...Handle.DEFAULTS, ...opts };
+    this.update({ ...Handle.DEFAULTS, ...opts });
+  }
+
+  update (opts) {
+    const oldEl = this.el;
+    const { value, ...restOpts } = opts;
     Object.assign(this, restOpts);
 
-    if (this.el) {
-      this.el.style.position = 'absolute';
-      if (this.el.tabIndex === -1) this.el.tabIndex = '-1';
-      this._originalTransform = window.getComputedStyle(this.el).transform;
-      if (this._originalTransform === 'none') this._originalTransform = '';
-      this.bindEvents();
-    }
-    this.value = value;
+    if (oldEl !== this.el) {
+      this.destroy();
 
+      if (this.el) {
+        this.el.style.position = 'absolute';
+        if (this.el.tabIndex === -1) this.el.tabIndex = '-1';
+        this._originalTransform = window.getComputedStyle(this.el).transform;
+        if (this._originalTransform === 'none') this._originalTransform = '';
+        this.bindEvents();
+      }
+    }
+
+    if (value != null) this.value = value;
     this.updateView();
   }
 
@@ -118,6 +127,14 @@ class Handle {
     return bound(this.minPosition, p, this.maxPosition) !== this.position;
   }
 
+  disable () {
+    this.disabled = true;
+  }
+
+  enable () {
+    this.disabled = false;
+  }
+
   _onKeyDown (e) {
     if (e.keyCode < LEFT_KEY || DOWN_KEY < e.keydown) return;
     e.preventDefault();
@@ -146,6 +163,7 @@ class Handle {
     this.el.style.transform = this._originalTransform;
   }
 
+  // Events
   _onChange () {
     if (this.onChange) this.onChange(this._value, this);
     if (!this.isActive) this.updateView();

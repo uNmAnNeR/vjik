@@ -7,25 +7,7 @@ class Range {
   constructor (opts) {
     this.updateView = this.updateView.bind(this);
 
-    Object.assign(this, opts);
-
-    if (this.el) {
-      this.el.style.position = 'absolute';
-      this._originalTransform = window.getComputedStyle(this.el).transform;
-      if (this._originalTransform === 'none') this._originalTransform = '';
-    }
-
-    if (this.start) {
-      this.startComponent = this.start instanceof Handle ?
-        this.start :
-        this.bar.handle(this.start);
-    }
-
-    if (this.stop) {
-      this.stopComponent = this.stop instanceof Handle ?
-        this.stop :
-        this.bar.handle(this.stop);
-    }
+    this.update(opts);
   }
 
   sync () {
@@ -33,6 +15,37 @@ class Range {
     if (this.startComponent) this.startComponent.sync();
     if (this.stopComponent) this.stopComponent.sync();
     this._synchronizing = false;
+  }
+
+  update (opts) {
+    const oldEl = this.el;
+    Object.assign(this, opts);
+
+    if (oldEl !== this.el) {
+      this.destroy();
+
+      if (this.el) {
+        this.el.style.position = 'absolute';
+        this._originalTransform = window.getComputedStyle(this.el).transform;
+        if (this._originalTransform === 'none') this._originalTransform = '';
+      }
+    }
+  }
+
+  get startComponent () {
+    if (!this.start) return;
+
+    return this.start instanceof Handle ?
+      this.start :
+      this.bar.handle(this.start);
+  }
+
+  get stopComponent () {
+    if (!this.stop) return;
+
+    return this.stop instanceof Handle ?
+      this.stop :
+      this.bar.handle(this.stop);
   }
 
   updateView () {
