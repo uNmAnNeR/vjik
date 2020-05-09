@@ -60,7 +60,7 @@ class Range {
   destroy () {
     if (this.el) {
       this.el.style.transform = this._originalTransform;
-      this.el.style.width = '0px';
+      this.el.style.width = '';
     }
   }
 
@@ -80,6 +80,19 @@ class Range {
 
   containsHandle (handle) {
     return this.startComponent === handle || this.stopComponent === handle;
+  }
+
+  _onChange () {
+    if (this.onChange) this.onChange({
+      start: this.startComponent?.value,
+      stop: this.stopComponent?.value,
+    }, this);
+  }
+
+  _verifyHandle (h) {
+    const vh = h === this.startComponent ? this.stopComponent : this.startComponent;
+
+    vh.value = vh.value;
   }
 }
 

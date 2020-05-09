@@ -33,7 +33,7 @@ class Handle {
       }
     }
 
-    if (value != null) this.value = value;
+    this.value = value ?? this.value;
     this.updateView();
   }
 
@@ -44,16 +44,19 @@ class Handle {
     this._onMove();
   }
 
-  get isActive () {
+  get isDragging () {
     return this._isActive;
   }
 
-  set isActive (isActive) {
-    this._isActive = isActive;
-    if (isActive) {
+  set isDragging (isDragging) {
+    this._isActive = isDragging;
+    if (isDragging) {
+      this._originalTransition = this.el.style.transition;
+      this.el.style.transition = 'none';
       this._onStartMove();
       if (this.el) this.el.focus();
     } else {
+      this.el.style.transition = this._originalTransition;
       this._onEndMove();
     }
   }
@@ -63,34 +66,40 @@ class Handle {
   }
 
   set value (v) {
-    v = bound(this.minValue, v, this.maxValue);
+    if (this.transform) v = this.transform(v, this);
+    v = bound(
+      this.bar.stepAligned(this.minValue, Vjik.ALIGN_DIRECTION.RIGHT),
+      this.bar.stepAligned(v),
+      this.bar.stepAligned(this.maxValue, Vjik.ALIGN_DIRECTION.LEFT),
+    );
     if (this.value === v) return;
 
     this._valueChanges.push(this.value);
 
     this._value = v;
-    this._onVerify();
+    this.bar._verifyHandle(this);
 
     const oldValue = this._valueChanges.pop();
 
     if (!this._valueChanges.length && this.value !== oldValue) {
       this._onChange();
+      this.bar._onHandleChange(this);
     }
   }
 
   get canBeMoved () {
-    return this.minValue < this.value || this.value < this.maxValue;
+    return this.minValue < this.value || this.value < this.maxValue && !this.disabled;
   }
 
   get position () {
-    return this.isActive ?
+    return this.isDragging ?
       this._position :
       this.bar.valueToPosition(this.value);
   }
 
   set position (p) {
     p = bound(this.minPosition, p, this.maxPosition);
-    if (this.isActive) this._position = p;
+    if (this.isDragging) this._position = p;
     this.value = this.bar.positionToValue(p);
     this.updateView();
   }
@@ -166,7 +175,7 @@ class Handle {
   // Events
   _onChange () {
     if (this.onChange) this.onChange(this._value, this);
-    if (!this.isActive) this.updateView();
+    if (!this.isDragging) this.updateView();
   }
 
   _onVerify () {
@@ -183,6 +192,8 @@ class Handle {
   }
 
   _onEndMove () {
+    this.position = this.bar.valueToPosition(this.value);
+    this.updateView();
     if (this.onEndMove) this.onEndMove(this.value, this);
   }
 }

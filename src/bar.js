@@ -6,9 +6,9 @@ import Handle from './handle.js';
 export default
 class Bar {
   constructor (opts) {
-    this.onStartMove = this.onStartMove.bind(this);
-    this.onMove = this.onMove.bind(this);
-    this.onEndMove = this.onEndMove.bind(this);
+    this._onStartDrag = this._onStartDrag.bind(this);
+    this._onDrag = this._onDrag.bind(this);
+    this._onEndDrag = this._onEndDrag.bind(this);
     this.updateView = this.updateView.bind(this);
 
     this.handleComponents = [];
@@ -29,7 +29,7 @@ class Bar {
     if (this.el) {
       const position = window.getComputedStyle(this.el).position;
       if (!position || position === 'static') this.el.style.position = 'relative';
-      Bar.START_EVENTS.forEach(ev => this.el.addEventListener(ev, this.onStartMove));
+      Vjik.DRAG_START_EVENTS.forEach(ev => this.el.addEventListener(ev, this._onStartDrag));
       window.addEventListener('resize', this.updateView);
     }
 
@@ -80,7 +80,17 @@ class Bar {
     return e.target === el || el.contains(e.target);
   }
 
-  onStartMove (e) {
+  touchedHandles (e) {
+    const dx = e.touches?.[0]?.pageX ?? e.pageX;
+    const dy = e.touches?.[0]?.pageY ?? e.pageY;
+
+    const touchedElements = document.elementsFromPoint(dx, dy);
+    const barIdx = touchedElements.indexOf(this.el);
+
+    return touchedElements.slice(0, barIdx).map(te => this.handleComponents.find(h => h.el === te)).filter(Boolean);
+  }
+
+  _onStartDrag (e) {
     // prevent default to disable text selection, etc...
     e.preventDefault();
     // TODO support multitouch! but currently just disable
@@ -89,25 +99,29 @@ class Bar {
     if (this.disabled) return;
 
     const startOffset = this._getEventOffset(e);
-    const startPosition = startOffset / this.width;
-    const [nearestHandle, moveOffset] = this.handleComponents.reduce(([nearest, nearestDist], h) => {
-      const hDist = startOffset - h.offset;
-      return ((!nearest || Math.abs(nearestDist) > Math.abs(hDist)) && h.canBeMoved && !h.disabled &&
-        (this._isEventOnElement(e, h.el) || h.canGetCloserToPosition(startPosition))) ?
-        [h, hDist] :
-        [nearest, nearestDist];
-    }, []);
+
+    const touchedHandles = this.touchedHandles(e);
+    let nearestHandle = touchedHandles.filter(h => h.canBeMoved)[0];
+    const isOnElement = Boolean(nearestHandle);
+    if (!nearestHandle) {
+      const startPosition = startOffset / this.width;
+
+      ([nearestHandle] = this.handleComponents.reduce(([nearest, nearestDist], h) => {
+        const hDist = startOffset - h.offset;
+        return ((!nearest || Math.abs(nearestDist) > Math.abs(hDist)) &&
+          !touchedHandles.includes(h) && h.canBeMoved && h.canGetCloserToPosition(startPosition)
+        ) ?
+          [h, hDist] :
+          [nearest, nearestDist];
+      }, []));
+    }
+
     if (!nearestHandle) return;
 
-    nearestHandle.isActive = true;
     this.bindChangeEvents();
-
-    if (this._isEventOnElement(e, nearestHandle.el)) {
-      this._moveOffset = moveOffset;
-    } else {
-      this._moveOffset = 0;
-      this.onMove(e);
-    }
+    this._moveOffset = isOnElement ? startOffset - nearestHandle.offset : 0;
+    nearestHandle.isDragging = true;
+    if (!isOnElement) this._onDrag(e);
   }
 
   _getEventOffset (e) {
@@ -127,10 +141,26 @@ class Bar {
     return (v - this.min) / this.length;
   }
 
-  onMove (e) {
+  get stepPrecision () {
+    if (!this.step) return 0;
+
+    return String(this.step).split('.')[1]?.length ?? 0;
+  }
+
+  stepAligned (v, direction=Vjik.ALIGN_DIRECTION.NONE) {
+    if (!this.step) return v;
+
+    let aligned = Number((Math.round(v / this.step) * this.step).toFixed(this.stepPrecision));
+    if (direction === Vjik.ALIGN_DIRECTION.LEFT && v < aligned) aligned -= this.step;
+    else if (direction === Vjik.ALIGN_DIRECTION.RIGHT && v > aligned) aligned += this.step;
+
+    return aligned;
+  }
+
+  _onDrag (e) {
     e.preventDefault();
-    if (this.disabled || this.activeHandle.disabled) return this.onEndMove(e);
-    this.activeHandle.position = (this._getEventOffset(e) - this._moveOffset) / this.width;
+    if (this.disabled || this.draggingHandle.disabled) return this._onEndDrag(e);
+    this.draggingHandle.position = (this._getEventOffset(e) - this._moveOffset) / this.width;
   }
 
   get width () {
@@ -141,29 +171,29 @@ class Bar {
     return this.max - this.min;
   }
 
-  get activeHandle () {
-    return this.handleComponents.find(h => h.isActive);
+  get draggingHandle () {
+    return this.handleComponents.find(h => h.isDragging);
   }
 
-  onEndMove (e) {
+  _onEndDrag (e) {
     e.preventDefault();
-    this.activeHandle.isActive = false;
+    this.draggingHandle.isDragging = false;
     this.unbindChangeEvents();
   }
 
   bindChangeEvents () {
-    Bar.MOVE_EVENTS.forEach(ev => document.body.addEventListener(ev, this.onMove));
-    Bar.END_EVENTS.forEach(ev => document.body.addEventListener(ev, this.onEndMove));
+    Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.body.addEventListener(ev, this._onDrag));
+    Vjik.DRAG_END_EVENTS.forEach(ev => document.body.addEventListener(ev, this._onEndDrag));
   }
 
   unbindChangeEvents () {
-    Bar.MOVE_EVENTS.forEach(ev => document.body.removeEventListener(ev, this.onMove));
-    Bar.END_EVENTS.forEach(ev => document.body.removeEventListener(ev, this.onEndMove)); 
+    Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.body.removeEventListener(ev, this._onDrag));
+    Vjik.DRAG_END_EVENTS.forEach(ev => document.body.removeEventListener(ev, this._onEndDrag));
   }
 
   destroy () {
     if (this.el) {
-      Bar.START_EVENTS.forEach(ev => this.el.removeEventListener(ev, this.onStartMove));
+      Vjik.DRAG_START_EVENTS.forEach(ev => this.el.removeEventListener(ev, this._onStartDrag));
     }
     window.removeEventListener('resize', this.updateView);
     this.handleComponents.forEach(h => h.destroy());
@@ -212,14 +242,19 @@ class Bar {
     this.rangesWithHandle(h).forEach(rc => rc.updateView());
   }
 
+  _onHandleChange (h) {
+    this.rangesWithHandle(h).forEach(rc => rc._onChange());
+  }
+
+  _verifyHandle (h) {
+    this.rangesWithHandle(h).forEach(rc => rc._verifyHandle(h));
+  }
+
   updateView () {
     this.handleComponents.forEach(h => h.updateView());
     this.rangeComponents.forEach(r => r.updateView());
   }
 }
-Bar.START_EVENTS = ['mousedown', 'touchstart', 'pointerdown'];
-Bar.MOVE_EVENTS = ['mousemove', 'touchmove', 'pointermove'];
-Bar.END_EVENTS = ['mouseup', 'touchend', 'pointerup'];
 Bar.DEFAULTS = {
   handles: [],
   ranges: [],
