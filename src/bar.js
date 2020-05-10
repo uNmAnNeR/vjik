@@ -93,10 +93,9 @@ class Bar {
     // TODO support multitouch! but currently just disable
     this.unbindChangeEvents();
 
-    if (this.disabled) return;
+    if (this.disabled || e.which !== 1 && !('touches' in e)) return;
 
     const startOffset = this._getEventOffset(e);
-
     const touchedHandles = this.touchedHandles(e);
     let nearestHandle = touchedHandles.filter(h => h.canBeMoved)[0];
     const isOnElement = Boolean(nearestHandle);
@@ -183,19 +182,19 @@ class Bar {
 
   _onEndDrag (e) {
     e.preventDefault();
-    this.draggingHandle.isDragging = false;
+    if (this.draggingHandle) this.draggingHandle.isDragging = false;
     this.unbindChangeEvents();
   }
 
   bindChangeEvents () {
-    Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.body.addEventListener(ev, this._onDrag));
-    Vjik.DRAG_END_EVENTS.forEach(ev => document.body.addEventListener(ev, this._onEndDrag));
+    Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.addEventListener(ev, this._onDrag));
+    Vjik.DRAG_END_EVENTS.forEach(ev => document.addEventListener(ev, this._onEndDrag));
     document.addEventListener('mouseout', this._onWindowLeave);
   }
 
   unbindChangeEvents () {
-    Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.body.removeEventListener(ev, this._onDrag));
-    Vjik.DRAG_END_EVENTS.forEach(ev => document.body.removeEventListener(ev, this._onEndDrag));
+    Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.removeEventListener(ev, this._onDrag));
+    Vjik.DRAG_END_EVENTS.forEach(ev => document.removeEventListener(ev, this._onEndDrag));
     document.removeEventListener('mouseout', this._onWindowLeave);
   }
 
