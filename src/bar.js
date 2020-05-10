@@ -76,10 +76,6 @@ class Bar {
     this.rangeComponents.forEach(c => c.sync());
   }
 
-  _isEventOnElement (e, el) {
-    return e.target === el || el.contains(e.target);
-  }
-
   touchedHandles (e) {
     const dx = e.touches?.[0]?.pageX ?? e.pageX;
     const dy = e.touches?.[0]?.pageY ?? e.pageY;
@@ -104,7 +100,7 @@ class Bar {
     let nearestHandle = touchedHandles.filter(h => h.canBeMoved)[0];
     const isOnElement = Boolean(nearestHandle);
     if (!nearestHandle) {
-      const startPosition = startOffset / this.width;
+      const startPosition = startOffset / this.size;
 
       ([nearestHandle] = this.handleComponents.reduce(([nearest, nearestDist], h) => {
         const hDist = startOffset - h.offset;
@@ -160,11 +156,14 @@ class Bar {
   _onDrag (e) {
     e.preventDefault();
     if (this.disabled || this.draggingHandle.disabled) return this._onEndDrag(e);
-    this.draggingHandle.position = (this._getEventOffset(e) - this._moveOffset) / this.width;
+    this.draggingHandle.position = (this._getEventOffset(e) - this._moveOffset) / this.size;
   }
 
-  get width () {
-    return this.el ? this.el.getBoundingClientRect().width : 0;
+  get size () {
+    if (!this.el) return 0;
+
+    const rect = this.el.getBoundingClientRect();
+    return this.vertical ? rect.height : rect.width;
   }
 
   get length () {

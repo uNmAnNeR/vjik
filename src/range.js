@@ -51,10 +51,20 @@ class Range {
   updateView () {
     if (!this.el) return;
 
-    const startOffset = this.startComponent?.offset ?? 0;
-    const stopOffset = this.stopComponent?.offset ?? this.bar.width;
-    this.el.style.transform = `${this._originalTransform} translateX(${startOffset}px)`;
-    this.el.style.width = `${Math.max(stopOffset - startOffset, 0)}px`;
+    let startOffset = this.startComponent?.offset ?? 0;
+    let stopOffset = this.stopComponent?.offset ?? this.bar.size;
+
+    if (this.bar.vertical) {
+      const so = startOffset;
+      startOffset = this.bar.size - stopOffset;
+      stopOffset = this.bar.size - so;
+    }
+
+    const coord = this.bar.vertical ? 'Y' : 'X';
+    const prop = this.bar.vertical ? 'height' : 'width';
+
+    this.el.style.transform = `${this._originalTransform} translate${coord}(${startOffset}px)`;
+    this.el.style[prop] = `${Math.max(stopOffset - startOffset, 0)}px`;
   }
 
   destroy () {

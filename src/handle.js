@@ -40,7 +40,9 @@ class Handle {
   updateView () {
     if (!this.el) return;
 
-    this.el.style.transform = `${this._originalTransform} translateX(${this.offset}px) translateX(-50%)`;
+    const coord = this.bar.vertical ? 'Y' : 'X';
+    let offset = this.offset; if (this.bar.vertical) offset = this.bar.size - offset
+    this.el.style.transform = `${this._originalTransform} translate${coord}(${offset}px) translate${coord}(-50%)`;
     this._onMove();
   }
 
@@ -53,11 +55,11 @@ class Handle {
     if (isDragging) {
       this._originalTransition = this.el.style.transition;
       this.el.style.transition = 'none';
-      this._onStartMove();
+      this._onStartDrag();
       if (this.el) this.el.focus();
     } else {
       this.el.style.transition = this._originalTransition;
-      this._onEndMove();
+      this._onEndDrag();
     }
   }
 
@@ -129,7 +131,7 @@ class Handle {
   }
 
   get offset () {
-    return this.position * this.bar.width;
+    return this.position * this.bar.size;
   }
 
   canGetCloserToPosition (p) {
@@ -187,14 +189,14 @@ class Handle {
     if (this.onMove) this.onMove(this.value, this);
   }
 
-  _onStartMove () {
-    if (this.onStartMove) this.onStartMove(this.value, this);
+  _onStartDrag () {
+    if (this.onStartDrag) this.onStartDrag(this.value, this);
   }
 
-  _onEndMove () {
+  _onEndDrag () {
     this.position = this.bar.valueToPosition(this.value);
     this.updateView();
-    if (this.onEndMove) this.onEndMove(this.value, this);
+    if (this.onEndDrag) this.onEndDrag(this.value, this);
   }
 }
 Handle.DEFAULTS = {

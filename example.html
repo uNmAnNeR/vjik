@@ -11,10 +11,11 @@
 
   <style type="text/css">
     #vjik {
-      width: 100%;
-      height: 30px;
+      width: 10px;
+      height: 300px;
       background: green;
       display: flex;
+      flex-direction: column;
       align-items: center;
     }
 
@@ -28,7 +29,7 @@
 
     #vjik-range {
       background: blue;
-      height: 20px;
+      width: 20px;
     }
 
     #vjik-handle-start {
@@ -45,15 +46,16 @@
   <script type="text/javascript">
     const slider = Vjik({
       el: document.getElementById('vjik'),
-      min: 1,
+      min: 0,
       max: 200,
       step: 20,
+      vertical: true,
 
       handles: {
         start: {
           el: document.getElementById('vjik-handle-start'),
           min: 10,
-          // max: 100,
+          max: 100,
           onChange (val) { console.log(val) },
         },
         stop: {
