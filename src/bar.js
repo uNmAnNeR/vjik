@@ -9,6 +9,7 @@ class Bar {
     this._onStartDrag = this._onStartDrag.bind(this);
     this._onDrag = this._onDrag.bind(this);
     this._onEndDrag = this._onEndDrag.bind(this);
+    this._onWindowLeave = this._onWindowLeave.bind(this);
     this.updateView = this.updateView.bind(this);
 
     this.handleComponents = [];
@@ -174,6 +175,12 @@ class Bar {
     return this.handleComponents.find(h => h.isDragging);
   }
 
+  _onWindowLeave (e) {
+    if (e.type !== "mouseout" || e.target.nodeName !== "HTML" || e.relatedTarget != null) return;
+
+    this._onEndDrag(e);
+  }
+
   _onEndDrag (e) {
     e.preventDefault();
     this.draggingHandle.isDragging = false;
@@ -183,11 +190,13 @@ class Bar {
   bindChangeEvents () {
     Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.body.addEventListener(ev, this._onDrag));
     Vjik.DRAG_END_EVENTS.forEach(ev => document.body.addEventListener(ev, this._onEndDrag));
+    document.addEventListener('mouseout', this._onWindowLeave);
   }
 
   unbindChangeEvents () {
     Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.body.removeEventListener(ev, this._onDrag));
     Vjik.DRAG_END_EVENTS.forEach(ev => document.body.removeEventListener(ev, this._onEndDrag));
+    document.removeEventListener('mouseout', this._onWindowLeave);
   }
 
   destroy () {
