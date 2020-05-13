@@ -8,7 +8,9 @@
     "clean": "rimraf dist/ esm/",
     "start": "rollup -c -w",
     "build": "npm run clean && rollup -c",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "make": "npm run test && npm run build",
+    "prepublishOnly": "npm run make"
   },
   "repository": {
     "type": "git",
