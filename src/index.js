@@ -8,3 +8,4 @@ import Vjik from './vjik.js';
 try {
   globalThis.Vjik = Vjik;
 } catch (e) {}
+export default Vjik;
