@@ -102,7 +102,7 @@ class Range {
   _verifyHandle (h) {
     const vh = h === this.startComponent ? this.stopComponent : this.startComponent;
 
-    vh.value = vh.value;
+    if (vh) vh.value = vh.value;
   }
 }
 

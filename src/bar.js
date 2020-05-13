@@ -6,9 +6,9 @@ import Handle from './handle.js';
 export default
 class Bar {
   constructor (opts) {
-    this._onStartDrag = this._onStartDrag.bind(this);
+    this._onDragStart = this._onDragStart.bind(this);
     this._onDrag = this._onDrag.bind(this);
-    this._onEndDrag = this._onEndDrag.bind(this);
+    this._onDragEnd = this._onDragEnd.bind(this);
     this._onWindowLeave = this._onWindowLeave.bind(this);
     this.updateView = this.updateView.bind(this);
 
@@ -30,7 +30,7 @@ class Bar {
     if (this.el) {
       const position = window.getComputedStyle(this.el).position;
       if (!position || position === 'static') this.el.style.position = 'relative';
-      Vjik.DRAG_START_EVENTS.forEach(ev => this.el.addEventListener(ev, this._onStartDrag));
+      Vjik.DRAG_START_EVENTS.forEach(ev => this.el.addEventListener(ev, this._onDragStart));
       window.addEventListener('resize', this.updateView);
     }
 
@@ -87,7 +87,7 @@ class Bar {
     return touchedElements.slice(0, barIdx).map(te => this.handleComponents.find(h => h.el === te)).filter(Boolean);
   }
 
-  _onStartDrag (e) {
+  _onDragStart (e) {
     // prevent default to disable text selection, etc...
     e.preventDefault();
     // TODO support multitouch! but currently just disable
@@ -155,7 +155,7 @@ class Bar {
 
   _onDrag (e) {
     e.preventDefault();
-    if (this.disabled || this.draggingHandle.disabled) return this._onEndDrag(e);
+    if (this.disabled || this.draggingHandle.disabled) return this._onDragEnd(e);
     this.draggingHandle.position = (this._getEventOffset(e) - this._moveOffset) / this.size;
   }
 
@@ -177,10 +177,10 @@ class Bar {
   _onWindowLeave (e) {
     if (e.type !== "mouseout" || e.target.nodeName !== "HTML" || e.relatedTarget != null) return;
 
-    this._onEndDrag(e);
+    this._onDragEnd(e);
   }
 
-  _onEndDrag (e) {
+  _onDragEnd (e) {
     e.preventDefault();
     if (this.draggingHandle) this.draggingHandle.isDragging = false;
     this.unbindChangeEvents();
@@ -188,19 +188,19 @@ class Bar {
 
   bindChangeEvents () {
     Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.addEventListener(ev, this._onDrag));
-    Vjik.DRAG_END_EVENTS.forEach(ev => document.addEventListener(ev, this._onEndDrag));
+    Vjik.DRAG_END_EVENTS.forEach(ev => document.addEventListener(ev, this._onDragEnd));
     document.addEventListener('mouseout', this._onWindowLeave);
   }
 
   unbindChangeEvents () {
     Vjik.DRAG_MOVE_EVENTS.forEach(ev => document.removeEventListener(ev, this._onDrag));
-    Vjik.DRAG_END_EVENTS.forEach(ev => document.removeEventListener(ev, this._onEndDrag));
+    Vjik.DRAG_END_EVENTS.forEach(ev => document.removeEventListener(ev, this._onDragEnd));
     document.removeEventListener('mouseout', this._onWindowLeave);
   }
 
   destroy () {
     if (this.el) {
-      Vjik.DRAG_START_EVENTS.forEach(ev => this.el.removeEventListener(ev, this._onStartDrag));
+      Vjik.DRAG_START_EVENTS.forEach(ev => this.el.removeEventListener(ev, this._onDragStart));
     }
     window.removeEventListener('resize', this.updateView);
     this.handleComponents.forEach(h => h.destroy());

@@ -55,11 +55,11 @@ class Handle {
     if (isDragging) {
       this._originalTransition = this.el.style.transition;
       this.el.style.transition = 'none';
-      this._onStartDrag();
+      this._onDragStart();
       if (this.el) this.el.focus();
     } else {
       this.el.style.transition = this._originalTransition;
-      this._onEndDrag();
+      this._onDragEnd();
     }
   }
 
@@ -85,7 +85,6 @@ class Handle {
 
     if (!this._valueChanges.length && this.value !== oldValue) {
       this._onChange();
-      this.bar._onHandleChange(this);
     }
   }
 
@@ -177,6 +176,7 @@ class Handle {
   // Events
   _onChange () {
     if (this.onChange) this.onChange(this._value, this);
+    this.bar._onHandleChange(this);
     if (!this.isDragging) this.updateView();
   }
 
@@ -189,14 +189,14 @@ class Handle {
     if (this.onMove) this.onMove(this.value, this);
   }
 
-  _onStartDrag () {
-    if (this.onStartDrag) this.onStartDrag(this.value, this);
+  _onDragStart () {
+    if (this.onDragStart) this.onDragStart(this.value, this);
   }
 
-  _onEndDrag () {
+  _onDragEnd () {
     this.position = this.bar.valueToPosition(this.value);
     this.updateView();
-    if (this.onEndDrag) this.onEndDrag(this.value, this);
+    if (this.onDragEnd) this.onDragEnd(this.value, this);
   }
 }
 Handle.DEFAULTS = {
